@@ -57,8 +57,8 @@ class KeepaAPI():
 
     def exec_product_api(
         self, 
-        asins: Optional[list] = None, 
-        jan_codes: Optional[list] = None
+        asins: Optional[List] = None, 
+        jan_codes: Optional[List] = None
     ) -> List:
         '''
         商品情報を取得するAPIを実行
@@ -66,14 +66,14 @@ class KeepaAPI():
         Args:
             asins: ASINのリスト
         '''
-        if asins:
+        if len(asins) >= 1:
             params = {
                 "key": self.API_KEY,
                 "domain": 5,
                 "days": 90,
                 "asin": ",".join(asins)
             }
-        elif jan_codes:
+        elif len(jan_codes) >= 1:
             params = {
                 "key": self.API_KEY,
                 "domain": 5,
@@ -95,9 +95,8 @@ class KeepaAPI():
 
     def fetch_products(        
         self,
-        *, # *をつけた以降の引数は名前付き引き数である必要がある。型が同じで間違えやすいため、名前付き引数を強制している
-        asins: Optional[list] = None, 
-        jan_codes: Optional[list] = None) -> List[KeepaProduct]:
+        asins: Optional[List] = None, 
+        jan_codes: Optional[List] = None) -> List[KeepaProduct]:
         '''
         ASINを指定して商品情報を取得し、KeepaProductクラスとして返す
         
@@ -105,7 +104,9 @@ class KeepaAPI():
             asins: ASIN一覧
         '''
         # APIをコール
+        print(asins)
         try:
+            
             products = self.exec_product_api(asins, jan_codes)
         except Exception as e:
             raise Exception(f"API error. message={e}")
