@@ -1,6 +1,8 @@
 # importの順番は慣例的には以下の順
 # pip install 不要なもの -> pip installが必要なもの -> 自作ライブラリ
 import sys
+from tkinter import E
+from typing import Optional, List
 from pathlib import Path
 from datetime import datetime
 
@@ -20,6 +22,7 @@ logger = set_logger(__name__)
 now = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 ASIN_LIST_CSV_PATH = f"{ROOT_PATH}/files/asin_list.csv"
+JAN_LIST_CSV_PATH = f"{ROOT_PATH}/files/jan_list.csv"
 FETCHED_PRODUCTS_CSV_PATH = f"{ROOT_PATH}/files/fetched_products_{now}.csv"
 
 
@@ -33,19 +36,22 @@ def fetch_ranking_products_to_csv(category_id: str):
     logger.info("[completed]")
 
 
-def fetch_product_to_csv(asins: list):
+def fetch_product_to_csv(mode: str, search_keys: list):
     # KeepaAPIクラスを使用して商品情報を取得
     keepa = KeepaAPI()
     
     # KeepaAPIは１回に最大１００件までしか取得できないため、100件以上の場合は、100件づつのリストに分割する
-    n = math.ceil(len(asins) / 100) # 分割数
-    splited_asins_list = np.array_split(asins, n) # 100個毎のリスト × n個 に分割
+    n = math.ceil(len(search_keys) / 100) # 分割数
+    splited_search_keys_list = np.array_split(search_keys, n) # 100個毎のリスト × n個 に分割
     logger.info(f"split_number={n}")
     
     # n回APIをコールして、結果をまとめる
     products = []
-    for splited_asins in splited_asins_list:
-        products.extend(keepa.fetch_products(asins=splited_asins))
+    for splited_search_keys in splited_search_keys_list:
+        if mode == "asin":
+            products.extend(keepa.fetch_products(asins=list(splited_search_keys)))
+        else:
+            products.extend(keepa.fetch_products(jan_codes=list(splited_search_keys)))
     logger.info(f"fetched items count={len(products)}")
     
     # CSVに出力
@@ -77,13 +83,18 @@ def fetch_product_to_csv(asins: list):
     )           
     
 
-def fetch_products_by_csv(limit: int=None):
+def fetch_products_by_csv(mode: str , limit: int=None):
     try:
         # 取得するASIN情報の読み込み
-        asin_list = pd.read_csv(ASIN_LIST_CSV_PATH)
-        in_asins = list(asin_list['asin'])[:limit] if limit and limit >= 1 else list(asin_list['asin'])
-        logger.info(f"[start] asin_list={in_asins}")
-        fetch_product_to_csv(in_asins)
+        if mode == "asin":
+            search_keys_list = pd.read_csv(ASIN_LIST_CSV_PATH, dtype="str")
+        elif mode == "jan":
+            search_keys_list = pd.read_csv(JAN_LIST_CSV_PATH, dtype="str")
+        else:
+            raise Exception("modeは、asin か jan を指定してください")
+        in_search_keys = list(search_keys_list[mode])[:limit] if limit and limit >= 1 else list(search_keys_list[mode])
+        logger.info(f"[start] asin_list={in_search_keys}")
+        fetch_product_to_csv(mode, in_search_keys)
         
         logger.info("[completed]")
     except Exception as e:

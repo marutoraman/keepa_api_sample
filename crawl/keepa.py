@@ -66,14 +66,14 @@ class KeepaAPI():
         Args:
             asins: ASINのリスト
         '''
-        if len(asins) >= 1:
+        if asins and len(asins) >= 1:
             params = {
                 "key": self.API_KEY,
                 "domain": 5,
                 "days": 90,
                 "asin": ",".join(asins)
             }
-        elif len(jan_codes) >= 1:
+        elif jan_codes and len(jan_codes) >= 1:
             params = {
                 "key": self.API_KEY,
                 "domain": 5,
@@ -85,6 +85,8 @@ class KeepaAPI():
         
         res = requests.get(self.PRODUCT_URI, params=params)
         if not(300 > res.status_code >= 200):
+            import traceback
+            traceback.print_exc()
             raise Exception(f"API connection error. message={res.text}")
         res_dict = res.json()
         try:
@@ -105,11 +107,12 @@ class KeepaAPI():
         '''
         # APIをコール
         print(asins)
-        try:
-            
-            products = self.exec_product_api(asins, jan_codes)
-        except Exception as e:
-            raise Exception(f"API error. message={e}")
+        #try:  
+        products = self.exec_product_api(asins, jan_codes)
+        # except Exception as e:
+        #     import traceback
+        #     traceback.print_exc()
+        #     raise Exception(f"API error. message={e}")
         
         # 空の場合は終了
         if not products:
