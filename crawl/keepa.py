@@ -55,19 +55,34 @@ class KeepaAPI():
             return []
 
 
-    def exec_product_api(self, asins: list) -> List:
+    def exec_product_api(
+        self, 
+        asins: Optional[list] = None, 
+        jan_codes: Optional[list] = None
+    ) -> List:
         '''
         商品情報を取得するAPIを実行
         
         Args:
             asins: ASINのリスト
         '''
-        params = {
-            "key": self.API_KEY,
-            "domain": 5,
-            "days": 90,
-            "asin": ",".join(asins)
-        }
+        if asins:
+            params = {
+                "key": self.API_KEY,
+                "domain": 5,
+                "days": 90,
+                "asin": ",".join(asins)
+            }
+        elif jan_codes:
+            params = {
+                "key": self.API_KEY,
+                "domain": 5,
+                "days": 90,
+                "code": ",".join(jan_codes)
+            }
+        else:
+            raise Exception("asinもしくはjanコードのいずれかを指定してください")
+        
         res = requests.get(self.PRODUCT_URI, params=params)
         if not(300 > res.status_code >= 200):
             raise Exception(f"API connection error. message={res.text}")
@@ -78,7 +93,11 @@ class KeepaAPI():
             return []
 
 
-    def fetch_products(self, asins: list) -> List[KeepaProduct]:
+    def fetch_products(        
+        self,
+        *, # *をつけた以降の引数は名前付き引き数である必要がある。型が同じで間違えやすいため、名前付き引数を強制している
+        asins: Optional[list] = None, 
+        jan_codes: Optional[list] = None) -> List[KeepaProduct]:
         '''
         ASINを指定して商品情報を取得し、KeepaProductクラスとして返す
         
@@ -87,7 +106,7 @@ class KeepaAPI():
         '''
         # APIをコール
         try:
-            products = self.exec_product_api(asins)
+            products = self.exec_product_api(asins, jan_codes)
         except Exception as e:
             raise Exception(f"API error. message={e}")
         

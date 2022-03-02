@@ -45,7 +45,7 @@ def fetch_product_to_csv(asins: list):
     # n回APIをコールして、結果をまとめる
     products = []
     for splited_asins in splited_asins_list:
-        products.extend(keepa.fetch_products(splited_asins))
+        products.extend(keepa.fetch_products(asins=splited_asins))
     logger.info(f"fetched items count={len(products)}")
     
     # CSVに出力
