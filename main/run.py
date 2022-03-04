@@ -36,7 +36,7 @@ def fetch_ranking_products_to_csv(category_id: str):
     logger.info("[completed]")
 
 
-def fetch_product_to_csv(mode: str, search_keys: list):
+def fetch_products(mode: str, search_keys: list):
     # KeepaAPIクラスを使用して商品情報を取得
     keepa = KeepaAPI()
     
@@ -54,18 +54,18 @@ def fetch_product_to_csv(mode: str, search_keys: list):
             products.extend(keepa.fetch_products(jan_codes=list(splited_search_keys)))
     logger.info(f"fetched items count={len(products)}")
     
-    # CSVに出力
-    df = pd.DataFrame()
-    for product in products:
-        product_dict = product.to_dict()
-        df = df.append(product_dict, ignore_index=True)
+    return products
     
-    df.to_csv(
+
+def export_csv(products: pd.DataFrame):
+    
+    products.to_csv(
         FETCHED_PRODUCTS_CSV_PATH, 
         mode="w", 
         encoding="utf-8_sig",
         columns=[
             "asin",
+            "jan",
             "title",
             "price",
             "description",
@@ -74,6 +74,7 @@ def fetch_product_to_csv(mode: str, search_keys: list):
         ],
         header=[
             "ASIN",
+            "JAN",
             "タイトル",
             "価格",
             "説明",
@@ -94,7 +95,14 @@ def fetch_products_by_csv(mode: str , limit: int=None):
             raise Exception("modeは、asin か jan を指定してください")
         in_search_keys = list(search_keys_list[mode])[:limit] if limit and limit >= 1 else list(search_keys_list[mode])
         logger.info(f"[start] asin_list={in_search_keys}")
-        fetch_product_to_csv(mode, in_search_keys)
+        products = fetch_products(mode, in_search_keys)
+        products_dict = []
+        for product in products:
+            products_dict.append(product.to_dict())
+        products_df = pd.DataFrame.from_dict(products_dict)
+        result_df = pd.merge(search_keys_list, products_df, how="outer")
+        print(result_df)
+        export_csv(result_df)
         
         logger.info("[completed]")
     except Exception as e:

@@ -106,7 +106,6 @@ class KeepaAPI():
             asins: ASIN一覧
         '''
         # APIをコール
-        print(asins)
         #try:  
         products = self.exec_product_api(asins, jan_codes)
         # except Exception as e:
@@ -137,7 +136,7 @@ class KeepaAPI():
                     price = new_price,
                     asin = product["asin"],
                     thumbnail_urls = thumbnail_urls,
-                    jan = product["eanList"],       
+                    jan = product["eanList"][0],       
                     url = self.AMAZON_PRODUCT_URL.format(asin=product["asin"])
                 )
             )
